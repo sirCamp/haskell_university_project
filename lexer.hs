@@ -129,7 +129,6 @@ s input@(c:l) res
 --Funzione di utilita' che permette di stampare qualsiasi input, visto che e' considerato stringa
 printer :: String -> String
 printer input = show(input)
-  
 
 
 -- FUNZIONE i DA FARE
@@ -139,8 +138,22 @@ i "$" = [(Symbol DOLLAR)]
  -- i (' ':l) = i l  ## inrealta non serve, perchè incluso in ogni caso
 i input@(f:l)
   | isSpace  f = i l
-  | isSymbol f = (Symbol $ toSymbol f) : i l
-  | otherwise =  do printer input ; [(Symbol DOLLAR)]  --TODO sistemare
+  | isSymbol f = (Symbol (toSymbol f)) : i l           --posso usare il $
+--  | '"' ==  f = sc  l
+--  | otherwise = do printer input;[(Symbol DOLLAR)];
+--  | otherwise =  do printer input ; [(Symbol DOLLAR)]; --TODO sistemare
+  | otherwise  =
+      let
+        call :: Char -> (Token, String)
+        call '"' = sc input ""
+        call '~' = n l 0 True
+        call c
+          | isDigitChar c = n input 0 False
+          | isAlphaChar c = s input ""
+        call _ = error ("Lexical error starting with \"" ++ input ++ "\"")
+        (token, next_input) = call f
+      in
+        token : i next_input
 
 
 -- Funzione principale per l'analisi lessicale
