@@ -126,9 +126,20 @@ s input@(c:l) res
     | isIdChar c = s l (res ++ [c])
     | otherwise = (extractWord(res), input)
 
+
+
 --Funzione di utilita' che permette di stampare qualsiasi input, visto che e' considerato stringa
+
 printer :: String -> String
 printer input = show(input)
+
+subparser :: Char -> [Char] -> String -> (Token, String)
+subparser '\"' l raw = sc l ""
+subparser '~' l raw = n l 0 True
+subparser f l raw
+    | isDigitChar f = n raw 0 False
+    | isAlphaChar f = s raw ""
+subparser  _ _ _    = error ("Something is wrong during parsing")    
 
 
 -- FUNZIONE i DA FARE
@@ -142,10 +153,10 @@ i input@(f:l)
 --  | '"' ==  f = sc  l
 --  | otherwise = do printer input;[(Symbol DOLLAR)];
 --  | otherwise =  do printer input ; [(Symbol DOLLAR)]; --TODO sistemare
-  | otherwise  =
+{-  | otherwise  =
       let
         call :: Char -> (Token, String)
-        call '"' = sc input ""
+        call '\"' = sc l ""
         call '~' = n l 0 True
         call c
           | isDigitChar c = n input 0 False
@@ -154,6 +165,12 @@ i input@(f:l)
         (token, next_input) = call f
       in
         token : i next_input
+-}
+
+  | otherwise =
+    let 
+      (token, next_input) = subparser f l input
+    in token : i next_input
 
 
 -- Funzione principale per l'analisi lessicale
