@@ -150,23 +150,6 @@ i "$" = [(Symbol DOLLAR)]
 i input@(f:l)
   | isSpace  f = i l
   | isSymbol f = (Symbol (toSymbol f)) : i l           --posso usare il $
---  | '"' ==  f = sc  l
---  | otherwise = do printer input;[(Symbol DOLLAR)];
---  | otherwise =  do printer input ; [(Symbol DOLLAR)]; --TODO sistemare
-{-  | otherwise  =
-      let
-        call :: Char -> (Token, String)
-        call '\"' = sc l ""
-        call '~' = n l 0 True
-        call c
-          | isDigitChar c = n input 0 False
-          | isAlphaChar c = s input ""
-        call _ = error ("Lexical error starting with \"" ++ input ++ "\"")
-        (token, next_input) = call f
-      in
-        token : i next_input
--}
-
   | otherwise =
     let 
       (token, next_input) = subparser f l input

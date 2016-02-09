@@ -51,9 +51,9 @@ data LKC
 raise :: Exception -> Exc a
 raise e = Raise e
 
-rec_key::[Token]-> Exc [Token]
-rec_key ((Keyword LET):b)    = Return b
-rec_key ((Keyword LETREC):b) = Return b 
+rec_key::[Token]-> Exc([Token],(LKC->[(LKC,LKC)])->LKC)
+rec_key ((Keyword LET):b)    = Return (b, LETC)
+rec_key ((Keyword LETREC):b) = Return (b, LETRECC)
 rec_key (a:b)                = Raise ("trovato " ++ show(a) ++", atteso LET o LETREC")
 rec_key  x                   = Raise ("ERRORE STRANO"  ++  show(x))
 
@@ -96,19 +96,16 @@ rec_equals (a:b)              = Raise ("trovato " ++ show(a) ++ ", atteso =")
 progdoll::[Token] -> String
 progdoll x= show (prog x)
              
-prog:: [Token] -> Exc([Token],[LKC])
-prog a@(first, remain)
+prog:: [Token] -> Exc([Token],LKC)
+prog a =
+    do
+        (x, let_part)<-rec_key a
+        (y, bind_part)<-bind x
+        z<-rec_in y
+        (w, trads) <-exp z
+        rec_end w
+        Return(w, trads)
 
-    | first == Keyword LET = Return([Keyword LET],lister(LETC))
-    | first == Keyword LETREC = Return([Keyword LETREC],lister(LETRECC))
-    | otherwise =
-        do
-             x<-rec_key a
-             y<-bind x
-             z<-rec_in y
-             (w, trads) <-exp z
-             rec_end w
-             Return(w, trads)
 
  
 exp::[Token]->Exc([Token],[LKC])
@@ -117,50 +114,50 @@ exp a@((Keyword LETREC):b) = (prog a)
 exp ((Keyword LAMBDA):b)   = do
                                 (x, first_trad) <- seq_var b
                                 (result, new_trad) <- exp x
-                                Return(result, ( (lister LAMBDAC) ++ (first_trad ++ new_trad )))
+                                Return(result, (  LAMBDAC first_trad  new_trad ))
 exp ((Operator CONS):b)    = do
                                 x<-rec_lp b
                                 (y, first_trad) <-exp x
                                 z<-rec_virg y
                                 (w, new_trad) <-exp z
                                 rec_rp w
-                                Return(w, ((lister CONSC)  ++ first_trad ++ new_trad))
+                                Return(w,  CONSC first_trad  new_trad)
 exp ((Operator LEQ):b)     = do
                                 x<-rec_lp b
                                 (y, first_trad) <-exp x
                                 z<-rec_virg y
                                 (w, new_trad) <- exp z
                                 rec_rp w
-                                Return(w, ((lister LEQC)  ++ first_trad ++ new_trad))
+                                Return(w, ( LEQC first_trad  new_trad))
 exp ((Operator EQ):b)      = do
                                 x<-rec_lp b
                                 (y, first_trad) <-exp x
                                 z<- rec_virg y
                                 (w, new_trad) <-exp z
                                 rec_rp w
-                                Return(w, ((lister EQC) ++ first_trad ++ new_trad)) -- la parentesi va prima, ovviamente
+                                Return(w, ( EQC  first_trad  new_trad ) -- la parentesi va prima, ovviamente
 exp ((Operator CAR):b)      =
                                 do
                                 (result, trad) <- exp b
-                                Return (result, ((lister CARC ) ++ trad))
+                                Return (result, ( CARC  trad))
 exp ((Operator CDR):b)      =
                                 do
                                 (result, trad) <- exp b
-                                Return (result, ((lister CDRC ) ++ trad))
+                                Return (result, ( CDRC  trad))
 exp ((Operator ATOM):b)     =
                                 do
                                 (result, trad) <- exp b
-                                Return (result, ((lister ATOMC ) ++ trad))
+                                Return (result, ( ATOMC  trad))
 exp ((Keyword IF):b)        = do
                                 (x, first_trad) <- exp b
                                 y<-rec_then x
                                 (z, second_trad) <-exp y
                                 w<-rec_else z
                                 (result, last_trad ) <- exp w
-                                Return(result ((lister IFC) ++ first_trad ++ second_trad ++ last_trad ))
+                                Return(result ( IFC  first_trad  second_trad last_trad ))
 exp x                       =  expa x
 
-
+bind:: [Token]->Exc([Token],[(LKC,LKC)])
 bind ((Id a):b)            =  do
                                 x<- rec_equals b
                                 y<- exp x
@@ -250,7 +247,7 @@ seq_var:: [Token]-> Exc([Token], [LKC])
 seq_var a @ (Id id : l) =
                         do
                          (before, first_trad)   <- seq_var l
-                         Return(before, ((lister (VAR id)) ++ first_trad))
+                         Return(before, ([VAR id] ++ first_trad))
 
 seq_var a @ (Symbol RPAREN : l ) = Return ( l, lister )
 seq_var a @ ( some : _) = error("ci deve essere qualcosa dopo, Token o ) ") -- ID
