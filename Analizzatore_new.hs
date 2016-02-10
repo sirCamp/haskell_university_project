@@ -52,18 +52,23 @@ raise :: Exception -> Exc a
 raise e = Raise e
 
 -- ha questo tipo perchè LETC e LETRECC hanno questo tipo e ritornanno un LKC
-{-rec_key::[Token]-> Exc([Token],LKC)
+rec_key::[Token]-> Exc([Token],LKC)
 rec_key ((Keyword LET):b)    = do
                                     (x, trad_bind) <- bind b
-                                    (y, trad_exp) <- exp b
-                                    Return (b, LETC trad_exp trad_bind)
+                                    z    <- rec_in x
+                                    (w, trad_exp) <- exp z
+                                    k <- rec_end w
+                                    Return (k, LETC trad_exp trad_bind)
 rec_key ((Keyword LETREC):b) = do
-                                                                 (x, trad_bind) <- bind b
-                                                                 (y, trad_exp) <- exp b
-                                                                 Return (b, LETRECC trad_exp trad_bind)-}
-rec_key::[Token]-> Exc ([Token], String)
-rec_key ((Keyword LET):b)    = Return (b,"LET")
-rec_key ((Keyword LETREC):b) = Return (b,"LETREC")
+                                   (x, trad_bind) <- bind b
+                                   z    <- rec_in x
+                                   (w, trad_exp) <- exp z
+                                   k <- rec_end w
+                                   Return (k, LETRECC trad_exp trad_bind)
+-- FIXME
+--rec_key::[Token]-> Exc ([Token], String)
+---rec_key ((Keyword LET):b)    = Return (b,"LET")
+--rec_key ((Keyword LETREC):b) = Return (b,"LETREC")
 rec_key (a:b)                = Raise ("trovato " ++ show(a) ++", atteso LET o LETREC")
 rec_key  x                   = Raise ("ERRORE STRANO"  ++  show(x))
 
@@ -106,18 +111,18 @@ rec_equals (a:b)              = Raise ("trovato " ++ show(a) ++ ", atteso =")
 progdoll::[Token] -> String
 progdoll x= show (prog x)
              
-{-prog:: [Token] -> Exc([Token],LKC)
+prog:: [Token] -> Exc([Token],LKC)
 prog a =
     do
         (x, let_part)<-rec_key a
-        (y, bind_part)<-bind x
-        z<-rec_in y
-        (w, trads) <-exp z
-        rec_end w
-        Return(w, trads)
--}
+        --(y, bind_part)<-bind x
+        --z<-rec_in y
+        --(w, trads) <-exp z
+        --rec_end w
+        Return(x, let_part)
 
-prog:: [Token] -> Exc([Token],LKC)
+
+{-prog:: [Token] -> Exc([Token],LKC)
 prog a = do
           (x, tipo)  <- rec_key a
           (y,trad_bind) <- bind x
@@ -125,20 +130,20 @@ prog a = do
           (w, trad_exp) <- exp z
           k <- rec_end w
           Return (k, if (tipo == "LET") then LETC trad_exp trad_bind else LETRECC trad_exp trad_bind)
-
+-}
 
 {-
     FUNZIONE EXP
+    LAMBDAC trad_sec_var  trad_exp ==> LAMBDAC argomenti e lvelues
 -}
 exp::[Token]->Exc([Token],LKC)
 exp a@((Keyword LET):b)    = (prog a)
 exp a@((Keyword LETREC):b) = (prog a)
 exp ((Keyword LAMBDA):b)   = do
                                 x     <-rec_lp b
-                                (z, trad_sec_var) <-seq_var x
-                                --z     <-rec_rp y
-                                (z, trad_exp)  <-exp z
-                                Return(z, (  LAMBDAC trad_sec_var  trad_exp ))
+                                (z, trad_sec_var) <- seq_var x --argomenti
+                                (w, trad_exp)  <- exp z
+                                Return(w, (  LAMBDAC trad_sec_var  trad_exp ))
 exp ((Operator CONS):b)    = do
                                 x<-rec_lp b
                                 (y, first_trad) <-exp x
@@ -257,9 +262,6 @@ fune1 ((Symbol MINUS):b) operand  =
 
 fune1 x operand                     = Return(x, operand)
 
-fune1 x _                           = error("Manca operando")
-
-
 {-
     FUNZIONE FUNT1
     - il tipo inposto dal fatto che h attributi ereditati
@@ -275,8 +277,6 @@ funt1 ((Symbol DIVISION):b) operand
                                     (x, trad_funt1) <-funf b
                                     funt1 x (DIV operand trad_funt1)
 funt1 x  operand                = Return(x, operand)
-
-funt1 x _                      = error("Manca parte operando")
 
 
 
@@ -322,10 +322,10 @@ fX (a:_)                   = Raise ("ERRORE in fX, TROVATO"++ show(a))
 -}
 exp_const::Token ->Exc(Bool,LKC)
 exp_const (Number val)  =  Return (True,NUM val)
-exp_const Nil         =  Return (True, NIL)
+exp_const Nil           =  Return (True, NIL)
 exp_const (Bool val)    = Return (True, BOO val)
 exp_const (String val)  = Return (True, STRI val)
-exp_const  _          = Return (False, ETY)
+exp_const  _            = Return (False, ETY)
 
 
 {-
@@ -360,8 +360,6 @@ fuy x                        =   Return (x, lister(ETY))
 -}
 
 lister a = [a]
-lister _ = error("No params")
-
 
 
 {-
@@ -378,13 +376,14 @@ n a @ (Symbol VIRGOLA : l) =
                             Return(before, first_trad)
 
 n a @ (Symbol RPAREN : _ ) =  Return (a,[])
-n a @ ( some : _ ) = error ("ci deve essere qualcosa dopo")
-n _ =  error("la sinstassi non e corretta")
+n a @ ( some : _ ) = Raise("ERRORE, ci deve essere qualcosa dopo " ++show(some) )
+n _ =  Raise("ERRORE, la sinstassi non e corretta")
 
 
 {-
     FUNZIONE SEQ_VAR
     -- ID o altro tipo
+    -- tolgo la parentesi destra all'ultima iterazione
 
 -}
 seq_var:: [Token]-> Exc([Token], [LKC])
@@ -394,12 +393,13 @@ seq_var a @ (Id id : l) =
                          Return(before, ((lister(VAR id)) ++ first_trad))
 
 seq_var a @ (Symbol RPAREN : l ) = Return ( l, [] )
---seq_var a @ ( some : _) = error("ci deve essere qualcosa dopo, Token o ) ") -- ID
-seq_var a@ (some : _) = Raise ("ERRORE in seq_var, TROVATO "++ show(some))
+seq_var a @ (some : _) = Raise ("ERRORE in seq_var, TROVATO "++ show(some))
+seq_var _ =  Raise("ERRORE, la sinstassi non e corretta")
 
 {-
     FUNZIONE SEQ_EXP
     -- se ho la combo messa cosi allora ritorno
+
 -}
 seq_exp:: [Token]-> Exc([Token], [LKC])
 seq_exp a @ (Symbol RPAREN : _) = Return(a, [] )
@@ -408,3 +408,19 @@ seq_exp a =
         (next, next_trad) <- exp a
         (result, last_trad) <- n next
         Return (result, (lister(next_trad) ++ last_trad ))
+
+
+
+{-
+    FUNZIONE generateLKC
+-}
+generateLKC :: Exc ([Token],LKC) -> LKC
+generateLKC (Return(a,b)) = b
+
+
+tester :: String -> Int -> String
+tester x y = do
+
+            if y == 1
+            then  show(generateLKC(prog(lexi x)))
+            else  progdoll( (lexi x))
