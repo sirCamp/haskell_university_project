@@ -5,7 +5,7 @@ Secdexpr(..)
 )
 where
 
-import Analizzatore_sint_2
+import Analizzatore
 
 
 
@@ -179,12 +179,35 @@ comp e n c =  case e of (VAR x) -> ((Ld (location x 0 n)):c)
                         (LETC x y)->  let
                                             var     =   vars y
                                             expr    =   exprs y
+                                            {-
                                             -- preparo prima i parametri delle expr
                                             -- simile a CALL preparo i parametri del programma grazi a complist
-                                            compylist expr n ((Ldf (comp var:n [Rtn])):Ap:c)
+                                            -- uso AP per caircare il corpo della funzione sul controllo e di costruire l'ambiente in cui fare l'esecuzione
+                                            -- genera un ambiente E'
+                                            -- con let eseguo subito la funzione
+                                            -- Infatti una LETC introduce binders della forma x=exp, in
+                                                cui le variabili locali x, per il corpo del LETC, sono del tutto simili ai parametri
+                                                formali del caso LAMBDA. Quindi il corpo del LETC va compilato mettendo queste
+                                                variabili locali in cima all’ambiente statico n usato dal compilatore. D’altra
+                                                parte i valori delle variabili locali, cio`e i valori dei corrispondenti exp, hanno
+                                                lo stesso ruolo dei parametri attuali di una CALL e quindi, in corrispondenza di
+                                                questi valori, va prodotto codice SECD che costruisca una lista di questi valori
+                                                sullo stack S. Sopra questa lista dovr`a venire inserita la chiusura del corpo del
+                                                LETC e in questa situazione, una Ap far`a eseguire il corpo del LETC nell’ambiente
+                                                dinamico corretto (con i valori delle variabili locali disponibili ed al posto
+                                                giusto, cio`e in cima all’ambiente dinamico).
+                                            -}
+                                       in
+                                            complist expr n ((Ldf (comp x (var:n) [Rtn])):Ap:c)
+
 
                                         
-                        (LETRECC x y)-> --DA FARE
+                        (LETRECC x y)-> let
+
+                                            var     =   vars y
+                                            expr    =   exprs y
+                                         in
+                                            Push : (complist expr (var:n) ((Ldf (comp x (var:n) [Rtn])):Rap:c))
 
                         {-
                             --(nom,param_att)->prep param form (invocazione funz)
@@ -204,4 +227,4 @@ comp e n c =  case e of (VAR x) -> ((Ld (location x 0 n)):c)
 
 --d= "let x= 5 and y= 6 in x*3 + y * 2* x + x*y end $"
 
-comp_one x = comp x [] []
+comp_one x = comp (generateLKCFromLispKit(x)) [] []

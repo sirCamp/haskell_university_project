@@ -1,5 +1,6 @@
-module Analizzatore_new(
+module Analizzatore(
 progdoll,
+generateLKCFromLispKit,
 d,
 LKC(..)
 )
@@ -264,18 +265,25 @@ fune1 x operand                     = Return(x, operand)
 
 {-
     FUNZIONE FUNT1
-    - il tipo inposto dal fatto che h attributi ereditati
+    -- il tipo inposto dal fatto che h attributi ereditati
+    -- devo stare attento a non ritornare subito, perchè altrimenti aggiungo un MULT prrima
+    -- funt1 x (MULT operand trad_funf) --> no sbaglio
+    -- stessa cosa per la DIV
+    -- es LETC (ADD (MULT (VAR "x") (NUM 3)) (ADD (MULT (VAR "y") (DIV (NUM 2) (VAR "x"))) (MULT (VAR "x") (VAR "y")))) [(VAR "x",NUM 5),(VAR "y",NUM 6)]
+        ho il DIV tra 2 e X che deve essere fatto prima di MULT
 -}
 funt1 :: [Token] -> LKC ->Exc([Token],LKC)
 funt1 ((Symbol TIMES):b) operand  =
                                 do
-                                    (x, trad_funt1) <-funf b
-                                    funt1 x (MULT operand trad_funt1)
+                                    (x, trad_funf) <-funf b
+                                    (z, trad_funt1) <- funt1 x trad_funf
+                                    Return(z, MULT operand trad_funt1)
 
 funt1 ((Symbol DIVISION):b) operand
                                 = do
-                                    (x, trad_funt1) <-funf b
-                                    funt1 x (DIV operand trad_funt1)
+                                    (x, trad_funf) <-funf b
+                                    (z, trad_funt1) <- funt1 x trad_funf
+                                    Return(z,(DIV operand trad_funt1))
 funt1 x  operand                = Return(x, operand)
 
 
@@ -294,7 +302,7 @@ funf (a:b)                     =
                                 do
                                     result <- exp_const a
                                     case result of
-                                        (True, lkc) -> Return(b,lkc)
+                                        (True, lkc) ->  Return(b,lkc)
                                         (False, empty) -> do
                                                             (x, lkc) <- fX(a:b)
                                                             Return(x, lkc)
@@ -314,7 +322,7 @@ fX ((Symbol LPAREN):b)     = do
                               (x, trad_expa)<- expa b
                               z <- rec_rp x
                               Return (z, trad_expa)
-fX (a:_)                   = Raise ("ERRORE in fX, TROVATO"++ show(a))
+fX (a:_)                   = Raise ("ERRORE in fX, TROVATO "++ show(a))
 
 
 {-
@@ -413,9 +421,20 @@ seq_exp a =
 
 {-
     FUNZIONE generateLKC
+    -- mi ritorna LKC da una Exc(Token,LKC)
 -}
 generateLKC :: Exc ([Token],LKC) -> LKC
 generateLKC (Return(a,b)) = b
+generateLKC (Raise errore) = error("C'è stato un errore"++errore)
+
+{-
+    FUNZIONE generateLKC
+    -- mi ritorna LKC da una Stringa di LispKit
+-}
+generateLKCFromLispKit :: String -> LKC
+generateLKCFromLispKit s =  case s of
+                                "" -> error ("Devi inserire un programma")
+                                t ->  generateLKC(prog((lexi s)))
 
 
 tester :: String -> Int -> String

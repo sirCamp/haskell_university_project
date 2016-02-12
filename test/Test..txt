@@ -1,0 +1,37 @@
+
+
+STRINGA:
+"let x= 5 and y= 6 in x*3 + y * 2* x + x*y end $"
+
+LKC MIO:
+LETC (ADD (MULT (VAR "x") (NUM 3)) (ADD (MULT (VAR "y") (MULT (NUM 2) (VAR "x"))) (MULT (VAR "x") (VAR "y")))) [(VAR "x",NUM 5),(VAR "y",NUM 6)]
+
+LKC CORRETTO:
+LETC (ADD (MULT (VAR "x") (NUM 3)) (ADD (MULT (VAR "y") (MULT (NUM 2) (VAR "x"))) (MULT (VAR "x") (VAR "y")))) [(VAR "x",NUM 5),(VAR "y",NUM 6)]
+
+COMPILATO MIO:
+[Ldc NIL,Ldc (NUM 6),Cons,Ldc (NUM 5),Cons,Ldf [Ld (0,1),Ld (0,0),Mult,Ld (0,0),Ldc (NUM 2),Mult,Ld (0,1),Mult,Add,Ldc (NUM 3),Ld (0,0),Mult,Add,Rtn],Ap]
+
+COMPILATO CORRETTO:
+[Ldc NIL,Ldc (NUM 6),Cons,Ldc (NUM 5),Cons,Ldf [Ld (0,1),Ld (0,0),Mult,Ld (0,0),Ldc (NUM 2),Mult,Ld (0,1),Mult,Add,Ldc (NUM 3),Ld (0,0),Mult,Add,Rtn],Ap]
+
+
+
+TEST LETREC:
+
+STRINGA:
+"letrec  FACT = lambda ( X ) if  eq ( X, 0 ) then 1 else  X*FACT(  X - 1 ) and G = lambda ( H L ) if  eq ( nil, L ) then L else cons( H(car( L ) ), G ( H, cdr ( L ) )) in G ( FACT, cons(1 ,cons(2, cons(3, nil))) ) end $"
+
+
+LKC MIO:
+LETRECC (CALL (VAR "G") [VAR "FACT",CONSC (NUM 1) (CONSC (NUM 2) (CONSC (NUM 3) NIL))]) [(VAR "FACT",LAMBDAC [VAR "X"] (IFC (EQC (VAR "X") (NUM 0)) (NUM 1) (MULT (VAR "X") (CALL (VAR "FACT") [SUB (VAR "X") (NUM 1)])))),(VAR "G",LAMBDAC [VAR "H",VAR "L"] (IFC (EQC NIL (VAR "L")) (VAR "L") (CONSC (CALL (VAR "H") [CARC (VAR "L")]) (CALL (VAR "G") [VAR "H",CDRC (VAR "L")]))))]
+
+LKC CORRETTO:
+LETRECC (CALL (VAR "G") [VAR "FACT",CONSC (NUM 1) (CONSC (NUM 2) (CONSC (NUM 3) NIL))]) [(VAR "FACT",LAMBDAC [VAR "X"] (IFC (EQC (VAR "X") (NUM 0)) (NUM 1) (MULT (VAR "X") (CALL (VAR "FACT") [SUB (VAR "X") (NUM 1)])))),(VAR "G",LAMBDAC [VAR "H",VAR "L"] (IFC (EQC NIL (VAR "L")) (VAR "L") (CONSC (CALL (VAR "H") [CARC (VAR "L")]) (CALL (VAR "G") [VAR "H",CDRC (VAR "L")]))))]
+
+
+COMPILATO MIO:
+[Push,Ldc NIL,Ldf [Ld (0,1),Ldc NIL,Eq,Sel [Ld (0,1),Join] [Ldc NIL,Ld (0,1),Cdr,Cons,Ld (0,0),Cons,Ld (1,1),Ap,Ldc NIL,Ld (0,1),Car,Cons,Ld (0,0),Ap,Cons,Join],Rtn],Cons,Ldf [Ldc (NUM 0),Ld (0,0),Eq,Sel [Ldc (NUM 1),Join] [Ldc NIL,Ldc (NUM 1),Ld (0,0),Sub,Cons,Ld (1,0),Ap,Ld (0,0),Mult,Join],Rtn],Cons,Ldf [Ldc NIL,Ldc NIL,Ldc (NUM 3),Cons,Ldc (NUM 2),Cons,Ldc (NUM 1),Cons,Cons,Ld (0,0),Cons,Ld (0,1),Ap,Rtn],Rap]
+
+COMPILATO CORRETTO:
+[Push,Ldc NIL,Ldf [Ld (0,1),Ldc NIL,Eq,Sel [Ld (0,1),Join] [Ldc NIL,Ld (0,1),Cdr,Cons,Ld (0,0),Cons,Ld (1,1),Ap,Ldc NIL,Ld (0,1),Car,Cons,Ld (0,0),Ap,Cons,Join],Rtn],Cons,Ldf [Ldc (NUM 0),Ld (0,0),Eq,Sel [Ldc (NUM 1),Join] [Ldc NIL,Ldc (NUM 1),Ld (0,0),Sub,Cons,Ld (1,0),Ap,Ld (0,0),Mult,Join],Rtn],Cons,Ldf [Ldc NIL,Ldc NIL,Ldc (NUM 3),Cons,Ldc (NUM 2),Cons,Ldc (NUM 1),Cons,Cons,Ld (0,0),Cons,Ld (0,1),Ap,Rtn],Rap]
