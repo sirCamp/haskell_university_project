@@ -112,6 +112,7 @@ rec_equals (a:b)              = Raise ("trovato " ++ show(a) ++ ", atteso =")
 progdoll::[Token] -> String
 progdoll x= show (prog x)
 
+-- fai il costruttore curificato
 prog:: [Token] -> Exc([Token],LKC)
 prog a =
     do
@@ -122,16 +123,6 @@ prog a =
         --rec_end w
         Return(x, let_part)
 
-
-{-prog:: [Token] -> Exc([Token],LKC)
-prog a = do
-          (x, tipo)  <- rec_key a
-          (y,trad_bind) <- bind x
-          z    <- rec_in y
-          (w, trad_exp) <- exp z
-          k <- rec_end w
-          Return (k, if (tipo == "LET") then LETC trad_exp trad_bind else LETRECC trad_exp trad_bind)
--}
 
 {-
     FUNZIONE EXP

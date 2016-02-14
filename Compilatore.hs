@@ -74,7 +74,7 @@ exprs((x,y):r)= (y:(exprs r))
 
 {-
     FUNZIONE COMPLIST
-    -- serve pre preparare i parametri attuali di una funzione
+    -- serve pre preparare i parametri formali di una funzione
     -- fa una ricorsione su tutti i parametri attuali, compila ciascun parametro dal primo all'ultimo
         e li mette in una lista per permettere alla funzione chiamata di utilizzarli come parametri
         attuali (cioè quelli passati allp'invocazione)
@@ -86,7 +86,7 @@ exprs((x,y):r)= (y:(exprs r))
 -}
 --          pa      n           c
 complist:: [LKC]-> [[LKC]] -> [Secdexpr]->[Secdexpr]
-complist [] _ c = ((Ldc NIL):c) 
+complist [] _ c = ((Ldc NIL):c)
 complist (x:y) n c = complist y n (comp x n (Cons:c))
 
 
@@ -180,6 +180,7 @@ comp e n c =  case e of (VAR x) -> ((Ld (location x 0 n)):c)
                                             var     =   vars y
                                             expr    =   exprs y
                                             {-
+                                            -- x è il corpo della funzione
                                             -- preparo prima i parametri delle expr
                                             -- simile a CALL preparo i parametri del programma grazi a complist
                                             -- uso AP per caircare il corpo della funzione sul controllo e di costruire l'ambiente in cui fare l'esecuzione
@@ -198,14 +199,18 @@ comp e n c =  case e of (VAR x) -> ((Ld (location x 0 n)):c)
                                                 giusto, cio`e in cima all’ambiente dinamico).
                                             -}
                                        in
-                                            complist expr n ((Ldf (comp x (var:n) [Rtn])):Ap:c)
+                                             complist expr n ((Ldf (comp x (var:n) [Rtn])):Ap:c)
 
 
-                                        
+                        {-
+                            -- preparo i parametri attuali ( expr )
+                        -}
                         (LETRECC x y)-> let
 
                                             var     =   vars y
+
                                             expr    =   exprs y
+
                                          in
                                             Push : (complist expr (var:n) ((Ldf (comp x (var:n) [Rtn])):Rap:c))
 
@@ -226,5 +231,22 @@ comp e n c =  case e of (VAR x) -> ((Ld (location x 0 n)):c)
 
 
 --d= "let x= 5 and y= 6 in x*3 + y * 2* x + x*y end $"
+
+{-
+
+    comp_one "let x=6 and LOL = lambda(f t) f  in (LOL (2,3)) * 5 end $"
+    [Ldc NIL,Ldf [Ld (0,0),Rtn],Cons,Ldc (NUM 6),Cons,Ldf [Ldc (NUM 5),Ldc NIL,Ldc (NUM 3),Cons,Ldc (NUM 2),Cons,Ld (0,1),Ap,Mult,Rtn],Ap]
+    -- come parametri di let ho : NIL, corpo di LOL, 6
+    -- parametri compilati cosi per essere in ordine con i parametri formali
+    -- per IN:
+        compilo 5, load del parametro 1 di let ( la funzione LOL ) unisco con i suoi parametri attuali ( 2 e 3)
+        e aggiungo il NIL ( as ever )
+
+    -- I suoi parametri attuali saranno preventivamente
+       messi in cima all’ambiente dinamico E (cf. istruzione Ap della Sezione 2)
+       ed occuperanno quindi la stessa posizione che i loro nomi occupano nell’ambiente
+       statico quando il corpo della funzione `e compilato.
+
+-}
 
 comp_one x = comp (generateLKCFromLispKit(x)) [] []
