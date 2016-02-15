@@ -53,7 +53,7 @@ raise :: Exception -> Exc a
 raise e = Raise e
 
 -- ha questo tipo perchè LETC e LETRECC hanno questo tipo e ritornanno un LKC
-rec_key::[Token]-> Exc([Token],LKC)
+{-rec_key::[Token]-> Exc([Token],LKC)
 rec_key ((Keyword LET):b)    = do
                                     (x, trad_bind) <- bind b
                                     z    <- rec_in x
@@ -66,10 +66,15 @@ rec_key ((Keyword LETREC):b) = do
                                    (w, trad_exp) <- exp z
                                    k <- rec_end w
                                    Return (k, LETRECC trad_exp trad_bind)
--- FIXME
---rec_key::[Token]-> Exc ([Token], String)
----rec_key ((Keyword LET):b)    = Return (b,"LET")
---rec_key ((Keyword LETREC):b) = Return (b,"LETREC")
+                                -}
+{-
+    FUNZIONE REC_KEY
+    -- in questo modo ritorno il costruttore corretto LETC o  LETRECC in base alla key
+    -- è currificato
+-}
+rec_key :: [Token] -> Exc ([Token], (LKC -> [(LKC, LKC)] -> LKC))
+rec_key ((Keyword LET):b)    = Return (b,LETC)
+rec_key ((Keyword LETREC):b) = Return (b,LETRECC)
 rec_key (a:b)                = Raise ("trovato " ++ show(a) ++", atteso LET o LETREC")
 rec_key  x                   = Raise ("ERRORE STRANO"  ++  show(x))
 
@@ -113,7 +118,7 @@ progdoll::[Token] -> String
 progdoll x= show (prog x)
 
 -- fai il costruttore curificato
-prog:: [Token] -> Exc([Token],LKC)
+{-prog:: [Token] -> Exc([Token],LKC)
 prog a =
     do
         (x, let_part)<-rec_key a
@@ -122,7 +127,22 @@ prog a =
         --(w, trads) <-exp z
         --rec_end w
         Return(x, let_part)
+-}
 
+{-
+    FUNZIONE PROG
+    -- aspetto il costruttore currificato LETC / LETRECC
+    -- per il resto sono uguali, basta creare gli LKC corretti
+-}
+prog:: [Token] -> Exc([Token],LKC)
+prog a =
+    do
+        (x, trad_letc_letrecc)<-rec_key a
+        (y, trad_bind) <- bind x
+        z    <- rec_in y
+        (w, trad_exp) <- exp z
+        k <- rec_end w
+        Return (k, (trad_letc_letrecc trad_exp trad_bind))
 
 {-
     FUNZIONE EXP
