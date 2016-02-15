@@ -52,12 +52,25 @@ data LKC
 raise :: Exception -> Exc a
 raise e = Raise e
 
-
+-- ha questo tipo perchè LETC e LETRECC hanno questo tipo e ritornanno un LKC
+{-rec_key::[Token]-> Exc([Token],LKC)
+rec_key ((Keyword LET):b)    = do
+                                    (x, trad_bind) <- bind b
+                                    z    <- rec_in x
+                                    (w, trad_exp) <- exp z
+                                    k <- rec_end w
+                                    Return (k, LETC trad_exp trad_bind)
+rec_key ((Keyword LETREC):b) = do
+                                   (x, trad_bind) <- bind b
+                                   z    <- rec_in x
+                                   (w, trad_exp) <- exp z
+                                   k <- rec_end w
+                                   Return (k, LETRECC trad_exp trad_bind)
+                                -}
 {-
     FUNZIONE REC_KEY
     -- in questo modo ritorno il costruttore corretto LETC o  LETRECC in base alla key
     -- è currificato
-    -- tipo dei costruttori: (LKC -> [(LKC, LKC)] -> LKC) ( è come se ritornassi una funzione )
 -}
 rec_key :: [Token] -> Exc ([Token], (LKC -> [(LKC, LKC)] -> LKC))
 rec_key ((Keyword LET):b)    = Return (b,LETC)
@@ -103,6 +116,18 @@ rec_equals (a:b)              = Raise ("trovato " ++ show(a) ++ ", atteso =")
 
 progdoll::[Token] -> String
 progdoll x= show (prog x)
+
+-- fai il costruttore curificato
+{-prog:: [Token] -> Exc([Token],LKC)
+prog a =
+    do
+        (x, let_part)<-rec_key a
+        --(y, bind_part)<-bind x
+        --z<-rec_in y
+        --(w, trads) <-exp z
+        --rec_end w
+        Return(x, let_part)
+-}
 
 {-
     FUNZIONE PROG
@@ -178,7 +203,7 @@ exp x                       =  expa x
     FUNZIONE BIND
 
     ovviamente funx si aspetta un [Token] non un coppia [Token],[LKC]
-     I due attributi devono assumere i seguenti
+     I due atributi devono assumere i seguenti
     valori: Trad(Bind) deve assumere come valore la lista delle coppie [(Var
     ‘‘x1’’, LKC(Exp1)),...,(Var ‘‘xn’’, LKC(Expn))]:LKC*LKC list
 
@@ -220,7 +245,7 @@ expa a = do
 {-
     FUNZIONE FUNT
     - Sono obbligato a chiamare T1 passandogli dietro anche le traduzioni fatte fino ad ora
-    --funt :: [Token]-> Exc([Token],LKC)
+    --funt :: [Token]-> Exc([Token],LKC) //FIXME
 -}
 
 
@@ -277,6 +302,12 @@ funt1 x  operand                = Return(x, operand)
 {-
     FUNZIONE FUNF
 
+    -- FIXME
+    -- =
+                                  --do
+                                  --  (val, trad) <- exp_const a
+                                   -- if (val) then Return (b, trad)
+                                    --              else fX (a:b) trad
 -}
 funf (a:b)                     =
                                 do
@@ -333,8 +364,18 @@ fuy x                        =   Return (x, lister(ETY))
 
 {-
     FUNZIONE DI SUPPORTO
-    -- polimorfismo param qualsiasi tipo lo metto in una lista in quanto NON dichiaro il tipo
+    -- polimorfismo param obbligato in quanto dichiaro i tipo essendo per i plimorfismi accetta i tipi
+    --lister :: LKC -> [LKC]
 
+    FIXME
+    --polimorfismo param obbligato in quanto dichiaro i tipo
+    --lister :: (LKC,LKC) -> [(LKC,LKC)]
+    --lister a = [a]
+    --lister _ = error("No params")
+
+    -- funzione nuova per gestire ,
+    -- devo avere lista LKC altrimenti ritorno solo l'ultimo valore
+    -- RPAREN sono tutte nel follow e terminali
 -}
 
 lister a = [a]
