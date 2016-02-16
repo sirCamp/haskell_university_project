@@ -174,6 +174,16 @@ e = "let z=2 in letrec x= 2+z and y= 2*z in x*y*z end end $"
 g="let f1 = lambda() letrec f2=lambda (z) if eq(z , 1) then 1 else z * f2( z - 1 ) in f2 end in let x=f1() in x(8) end end $"
 
 
+{-h = "let "++
+        "f1 = lambda () "++
+                    "letrec f2 = lambda (z) if eq(z,1) then 1 " ++
+                                            "else z*f2(z-1) "++
+                    "in f2 "++
+                    "end "++
+    "in "++
+        "f1 "++
+    "end $"
+-}
 run x = fin ( comp_one (x) )
 
 
