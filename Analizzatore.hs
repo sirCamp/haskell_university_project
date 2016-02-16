@@ -1,6 +1,7 @@
 module Analizzatore(
 progdoll,
 generateLKCFromLispKit,
+tester,
 d,
 LKC(..)
 )
