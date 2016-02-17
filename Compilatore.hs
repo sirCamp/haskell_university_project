@@ -385,11 +385,7 @@ comp e n c =  case e of (VAR x) -> ((Ld (location x 0 n)):c)
  
 --esempi di prova
 
---c="letrec  FACT = lambda ( X ) if  eq ( X, 0 ) then 1 else  X*FACT(  X - 1 ) and G = lambda ( H L ) if  eq ( nil, L ) then L else c--ons( H(car( L ) ), G ( H, cdr ( L ) )) in G ( FACT, cons(1 ,cons(2, cons(3, nil))) ) end $"
 
-
-
---d= "let x= 5 and y= 6 in x*3 + y * 2* x + x*y end $"
 
 {-
 
