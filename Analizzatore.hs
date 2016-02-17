@@ -363,6 +363,8 @@ n _ =  Raise("ERRORE, la sinstassi non e corretta")
     FUNZIONE SEQ_VAR
     -- ID o altro tipo
     -- tolgo la parentesi destra all'ultima iterazione
+    -- nel first ho "epsilon"  ==> devo considerare il follow
+       ( in sostanza se sono vuoto devo considerare il primo dei miei successori )
 
 -}
 seq_var:: [Token]-> Exc([Token], [LKC])
