@@ -1,8 +1,6 @@
 module Analizzatore(
 progdoll,
 generateLKCFromLispKit,
-tester,
-d,
 LKC(..)
 )
 where
@@ -457,11 +455,3 @@ generateLKCFromLispKit :: String -> LKC
 generateLKCFromLispKit s =  case s of
                                 "" -> error ("Devi inserire un programma")
                                 t ->  generateLKC(prog((lexi s)))
-
-
-tester :: String -> Int -> String
-tester x y = do
-
-            if y == 1
-            then  show(generateLKC(prog(lexi x)))
-            else  progdoll( (lexi x))

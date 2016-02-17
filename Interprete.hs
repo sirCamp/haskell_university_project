@@ -2,6 +2,7 @@
 module Interprete(
 interprete,
 Valore(..),
+run,
 ) where
 
 import Compilatore

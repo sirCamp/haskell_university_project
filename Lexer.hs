@@ -3,9 +3,7 @@ Token(..),
 Symbol_T(..),
 Operator_T(..),
 Keyword_T(..),
-lexi,
-c,
-d
+lexi
 ) where
 
 import Prelude hiding (EQ)
@@ -225,12 +223,6 @@ i input@(f:l)
 -}
 lexi :: String -> [Token]
 lexi = i
-
-c = "letrec  FACT = lambda ( X ) if  eq ( X, 0 ) then 1 else  X*FACT(  X- 1 )and G = lambda ( H L ) if  eq ( L,  nil ) then L else cons( H(car( L ) ), G ( H, cdr ( L ) )) in G ( FACT, cons(1, cons(2, cons(3, nil))) ) end $";
-
-d = "let x=cons(\"ab\", cons(\"cd\", nil)) in if true then cons(\"01\", x) else nil end $";
-
-
 
 
 
