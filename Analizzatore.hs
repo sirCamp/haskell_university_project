@@ -106,9 +106,23 @@ progdoll::[Token] -> String
 progdoll x= show (prog x)
 
 {-
-    FUNZIONE PROG
+    FUNZIONE PROG:
+
+    -- funzione che rappresenta le produzioni del non terminale Prog
     -- aspetto il costruttore currificato LETC / LETRECC
     -- per il resto sono uguali, basta creare gli LKC corretti
+    -- ​1.1:   Prog​ ::= let Bind in Exp end
+    -- 1.2:   Prog​ ::= letrec Bind in Exp end
+
+    -- LETC LKC [(LKC,LKC)]    -- LETC Corpo [(var,exp)]
+    -- LETRECC LKC [(LKC,LKC)] -- LETRECC Corpo [(var,exp)]
+    -- Ho il costruttore currificato che mi arriva da rec_key
+
+    -- cerco LET | LETREC
+    -- cerco produzione BIND e traduco
+    -- cerco Token IN
+    -- cerca produzione EXP e traduco
+    -- cerco Token END
 -}
 prog:: [Token] -> Exc([Token],LKC)
 prog a =
@@ -121,8 +135,13 @@ prog a =
         Return (k, (trad_letc_letrecc trad_exp trad_bind))
 
 {-
-    FUNZIONE EXP
-    LAMBDAC trad_sec_var  trad_exp ==> LAMBDAC argomenti e lvelues
+    FUNZIONE EXP:
+
+    -- rappresento il non terminale EXP
+
+    -- LET elaboro il blocco LET
+    -- LETREC elaboro il blocco LETREC
+    -- LAMBDA trad_sec_var  trad_exp ==> LAMBDAC argomenti e corpo
 -}
 exp::[Token]->Exc([Token],LKC)
 exp a@((Keyword LET):b)    = (prog a)
@@ -176,17 +195,25 @@ exp x                       =  expa x
 
 
 {-
-    FUNZIONE BIND
+    FUNZIONE BIND:
 
-    ovviamente funx si aspetta un [Token] non un coppia [Token],[LKC]
-     I due attributi devono assumere i seguenti
-    valori: Trad(Bind) deve assumere come valore la lista delle coppie [(Var
-    ‘‘x1’’, LKC(Exp1)),...,(Var ‘‘xn’’, LKC(Expn))]:LKC*LKC list
+    -- i due attributi devono assumere i seguenti
+       valori: Trad(Bind) deve assumere come valore la lista delle coppie [(Var
+       ''x1'', LKC(Exp1)),...,(Var ‘‘xn’’, LKC(Expn))]:LKC*LKC list
 
-    richiamo bind continuamente funche inizio a ritornare quindi tirono LKC[EXP]
-    se seguo la sezione qui dovrei avere un assegnazione variabile valore
+    -- richiamo bind continuamente funche inizio a ritornare quindi tirono LKC[EXP]
+       se seguo la sezione qui dovrei avere un assegnazione variabile valore
+       quindi ho [variabile nomervaribile, EXP successiva (val)] cioè quello che fa il bind
 
-    quindi ho [variabile nomervaribile, EXP successiva] cioè quello che fa il bind
+    -- (Id a) è il token che rappresenta il nome del bind
+    -- 2) Bind​ ::= var = Exp X
+    -- Bisogna produrre:
+    -- [(VAR ‘‘x’’,NUM 5),(VAR ‘‘y’’,NUM 6)]
+
+    -- cerco il Token EQUALS
+    -- cerco l'EXP ==> valore
+    --
+
 
 -}
 bind:: [Token]->Exc([Token],[(LKC,LKC)])
@@ -200,9 +227,12 @@ bind (a:_)                  = Raise ("BINDER CON "++ show(a) ++" A SINISTRA")
 
 
 {-
-    FUNZIONE FUNX
-    - per colpa di bind b  ora ritorno una lista di coppie di LKC quindi non posso
-    - ritornare solo a ma siccome sono sun IN è il primo colpo dove definisco l'albero, ergo, ritorno vuoto
+    FUNZIONE FUNX:
+
+    -- non terminale X
+    -- elaboro il binder successivo
+    -- per colpa di bind b ora ritorno una lista di coppie di LKC quindi non posso
+       ritornare solo a, ma siccome sono sun IN è il primo colpo dove definisco l'albero, ergo, ritorno vuoto
 -}
 funx ((Keyword AND):b)     = bind b
 funx a@((Keyword IN):b)    = Return (a,[])
@@ -210,7 +240,9 @@ funx (a:_)                 = Raise ("DOPO BINDERS; TROVATO"++show(a))
 
 
 {-
-    FUNZIONE EXPA
+    FUNZIONE EXPA:
+
+    -- rappresenta il non terminale EXPA
 
 -}
 expa a = do
@@ -233,7 +265,10 @@ funt a = do
 
 {-
     FUNZIONE FUNE1
-    - il tipo inposto dal fatto che h attributi ereditati
+
+    -- il tipo inposto dal fatto che h attributi ereditati
+    --  ADD LKC LKC
+    --  SUB LKC LKC
 -}
 fune1 :: [Token] -> LKC -> Exc([Token],LKC)
 fune1 ((Symbol PLUS):b)  operand  =
@@ -248,12 +283,17 @@ fune1 ((Symbol MINUS):b) operand  =
                                         (y, trad_fune1) <- fune1 x trad_funt
                                         Return(y, SUB operand trad_fune1)
 
-fune1 x operand                     = Return(x, operand)
+fune1 x operand                     = Return(x, operand) -- follow perchè ho epsilon in first
 
 {-
-    FUNZIONE FUNT1
+    FUNZIONE FUNT1:
+
     -- il tipo inposto dal fatto che h attributi ereditati
-    -- devo stare attento a non ritornare subito, perchè altrimenti aggiungo un MULT prrima
+    --  MULT LKC LKC
+    --  DIV LKC LKC
+
+    ATT:
+    -- devo stare attento a non ritornare subito, perchè altrimenti aggiungo un MULT prima
     -- funt1 x (MULT operand trad_funf) --> no sbaglio
     -- stessa cosa per la DIV
     -- es LETC (ADD (MULT (VAR "x") (NUM 3)) (ADD (MULT (VAR "y") (DIV (NUM 2) (VAR "x"))) (MULT (VAR "x") (VAR "y")))) [(VAR "x",NUM 5),(VAR "y",NUM 6)]
@@ -276,7 +316,12 @@ funt1 x  operand                = Return(x, operand)
 
 
 {-
-    FUNZIONE FUNF
+    FUNZIONE FUNF:
+
+    -- produzioni di F
+    -- NUM Integer, BOO Bool, STRI String, NIL
+    -- se TRUE ritorno la costante LKC con token relativo
+    -- se FALSE ritorno Fx --> controllo di non essere alla fine
 
 -}
 funf (a:b)                     =
@@ -290,8 +335,11 @@ funf (a:b)                     =
 
 
 {-
-    FUNZIONE FX
-    - controllo di non essere alla fine, se non sono alla fine allora invoco la funzione con CALL
+    FUNZIONE FX:
+
+    -- controllo di non essere alla fine, se non sono alla fine allora invoco la funzione con CALL
+    --  VAR LKC se viene referenziato il nome di una variabile
+    --  CALL LKC [LKC] se dopo il token Id c'è una sequenza di espressioni
 -}
 fX:: [Token] ->Exc([Token],LKC)
 fX ((Id a):b)              =  do
@@ -299,6 +347,7 @@ fX ((Id a):b)              =  do
                                 if(trad_funy == [ETY])
                                     then Return(x, VAR a)
                                     else Return(x, CALL (VAR a) trad_funy)
+-- espressione algebrica
 fX ((Symbol LPAREN):b)     = do
                               (x, trad_expa)<- expa b
                               z <- rec_rp x

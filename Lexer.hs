@@ -78,6 +78,12 @@ extractWord w = case w of
     
     otherwise -> Id w
 
+
+{-
+    FUNZIONE TOSYMBOL:
+
+    -- converto i simboli nei corrispoettivi TOKEN
+-}
 toSymbol :: Char -> Symbol_T
 toSymbol c = case c of
     '(' -> LPAREN
@@ -91,16 +97,25 @@ toSymbol c = case c of
     
 
 
-{- Funzioni che implementano direttamente gli stati dell'automa. Osserva che
+{-
+
+   DESCRIZIONE FUNZIONI:
+
+   Funzioni che implementano direttamente gli stati dell'automa. Osserva che
    non c'è ricorsione. Il passaggio dallo stato iniziale e principale I ad un
    altro stato è realizzato con un'invocazione. Poi si ritorna sempre a I e
-   quindi basta il normale ritorno della funzione. -}
+   quindi basta il normale ritorno della funzione.
+-}
 
--- Stato N per riconoscere i numeri
-{- n input numero segno
-   n è la stringa in input
-   numero è il numero elaborato finora
-   segno è il segno del numero, true sse è negativo (rilevato da I) -}
+
+{-
+   FUNZIONE N:
+   -- n input numero segno
+   -- n è la stringa in input
+   -- numero è il numero elaborato finora
+   -- segno è il segno del numero, true sse è negativo (rilevato da I)
+   -- Stato N per riconoscere i numeri
+-}
 n :: String -> Integer -> Bool -> (Token, String)
 n "" _ _ = error "Unexpected end of string"
 n input@(c:l) num sign
@@ -109,17 +124,27 @@ n input@(c:l) num sign
         in n l (num*10 + d) sign
     | otherwise = (Number((if sign then -1 else 1) * num), input)
 
--- Stato SC per riconoscere le stringhe tra virgolette
-{- sc input stringa
-   stringa è la stringa elaborata finora -}
+
+{-
+    FUNZIONE SC:
+
+   -- sc input stringa
+   -- stringa è la stringa elaborata finora
+   -- Stato SC per riconoscere le stringhe tra virgolette
+-}
 sc :: String -> String -> (Token, String)
 sc "" _ = error "Unexpected end of string"
 sc ('"':l) res = (String res, l)
 sc (c:l) res = sc l (res ++ [c])
 
--- Stato S per raccogliere le stringhe che possono corrispondere ad identificatori, operatori prefissi o keyword
-{- s input stringa
-   stringa è l'identificatore elaborato finora -}
+
+{-
+    FUNZIONE S:
+
+   -- s input stringa
+   -- stringa è l'identificatore elaborato finora
+   -- Stato S per raccogliere le stringhe che possono corrispondere ad identificatori, operatori prefissi o keyword
+-}
 s :: String -> String -> (Token, String)
 s "" _ = error "Unexpected end of string"
 s input@(c:l) res
@@ -128,11 +153,25 @@ s input@(c:l) res
 
 
 
---Funzione di utilita' che permette di stampare qualsiasi input, visto che e' considerato stringa
+{-
+    FUNZIONE PRINTER:
 
+   --funzione di utilita' che permette di stampare qualsiasi input, visto che e' considerato stringa
+-}
 printer :: String -> String
 printer input = show(input)
 
+{-
+    FUNZIONE SUBPARSER:
+
+    -- f::Char : è la prima parte dell'input raw che riceve da i
+    -- l::[Char] : è la seconda parte dell'input raw che ricevo da i
+    -- raw::[String]: è l'input originale originale
+    -- casi:
+        se '\"' sta cominciando una stringa, invoco sc passando l (il passo succ) e "" ( sono all'inizio )
+        se '~'  sta per arrivare un numero negativo passo l a n (0 perchè sono all'inizio) e TRUE perchè negativo
+        se nor  sta per arrivare un carattere char o un numero (positivo quindi FALSE) quindi invoco n/s
+-}
 subparser :: Char -> [Char] -> String -> (Token, String)
 subparser '\"' l raw = sc l ""
 subparser '~' l raw = n l 0 True
@@ -142,32 +181,54 @@ subparser f l raw
 subparser  _ _ _    = error ("Something is wrong during parsing")    
 
 
--- FUNZIONE i DA FARE
+
+{-
+
+    LEXER:
+
+    L'analizzatore lessicale riceve come input un programma in LispKit, cioè una lista
+    di caratteri e deve riconoscere le componenti elementari del linguaggio e deve met-
+    terle in una forma che sia semplice da manipolare nella successiva fase di analisi
+    sintattica ==> TOKEN
+
+    Per esempio, deve riconoscere le costanti (per esempio i numeri interi
+    oppure il valore true, eccetera), le parole chiave, gli identificatori, gli operatori ed
+    i simboli di separazione.
+-}
+
+{-
+    FUNZIONE i:
+
+    -- input::[String] ricevo la stringa in LispKit
+    -- f::Char è la prima parte della stringa
+    -- l::[Char] è la parte rimanente
+    -- faccio la ricorsione sui paramentri successivi e al ritorno pongo il risultato
+    -- uso subparser per la gesione dei casi "strani"
+
+-}
 i :: String -> [Token]
 i "" = error "Unexpected end of string"
 i "$" = [(Symbol DOLLAR)]
- -- i (' ':l) = i l  ## inrealta non serve, perchè incluso in ogni caso
 i input@(f:l)
   | isSpace  f = i l
-  | isSymbol f = (Symbol (toSymbol f)) : i l           --posso usare il $
+  | isSymbol f = (Symbol (toSymbol f)) : i l
   | otherwise =
     let 
       (token, next_input) = subparser f l input
     in token : i next_input
 
 
--- Funzione principale per l'analisi lessicale
+{-
+    FUNZIONE LEXI:
+
+    -- Funzione principale per l'analisi lessicale
+-}
 lexi :: String -> [Token]
 lexi = i
 
 c = "letrec  FACT = lambda ( X ) if  eq ( X, 0 ) then 1 else  X*FACT(  X- 1 )and G = lambda ( H L ) if  eq ( L,  nil ) then L else cons( H(car( L ) ), G ( H, cdr ( L ) )) in G ( FACT, cons(1, cons(2, cons(3, nil))) ) end $";
 
 d = "let x=cons(\"ab\", cons(\"cd\", nil)) in if true then cons(\"01\", x) else nil end $";
-
-
-
-
--- il dollaro mette prima tutto
 
 
 
