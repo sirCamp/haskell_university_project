@@ -228,41 +228,6 @@ fin x= (interprete [] [] (x ++ [Stop]) [])  --se x e'  programma Secdexpr da ese
 
 -- Mostra che si puo' usare letrec anche con binders non-funzionali. Le var a sinistra non devono apparire a destra 
 
-e = "let z=2 in letrec x= 2+z and y= 2*z in x*y*z end end $"
-
--- distribuisce FACT su una lista di interi *)
-
---val S="letrec  FACT = lambda ( X ) if  eq ( X, 0 ) then 1 else  X * FACT(  X - 1 )"^
---" and G = lambda ( H  L ) if  eq ( nil, L ) then L else cons( H(car( L ) ), G ( H , cdr ( L ) ))"^
---" in G ( FACT, cons( 6 ,cons( 7, cons( 8 , nil))) ) end $";
-
---(*considera liste di liste Z e produce una lista semplice che contiene tanti interi quante sono le liste contenute in Z e l'intero 
---corrispondente ad una lista contenuta in Z � la somma dei fattoriali dei suoi elementi: f2=fattoriale, f1=calcola somma dei fattori--ali degli elementi di una 
---lista di interi e f0 distribuisce f1 sulle liste contenute in Z *)
-
-{-f="letrec f0 = lambda ( x )
-          letrec f1 = lambda(y) 
-                 letrec f2=lambda (z) if eq(z , 1) then 1 else z * f2( z - 1 ) 
-                 in if eq( y , nil ) then 0 else f2 ( car ( y ) ) + f1 ( cdr (y)) end 
-          in if eq(x , nil) then nil else cons (f1 ( car ( x )),f0 ( cdr ( x ) ) ) end 
-   in f0( cons (cons (3 , cons (3 , nil)), cons( cons (3 , nil), nil))) end $"
--}
-
---(* esempio di funzione che restituisce una funzione locale *)
-
-g="let f1 = lambda() letrec f2=lambda (z) if eq(z , 1) then 1 else z * f2( z - 1 ) in f2 end in let x=f1() in x(8) end end $"
-
-
-{-h = "let "++
-        "f1 = lambda () "++
-                    "letrec f2 = lambda (z) if eq(z,1) then 1 " ++
-                                            "else z*f2(z-1) "++
-                    "in f2 "++
-                    "end "++
-    "in "++
-        "f1 "++
-    "end $"
--}
 run x = fin ( comp_one (x) )
 
 
