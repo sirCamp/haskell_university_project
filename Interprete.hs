@@ -183,7 +183,7 @@ interprete s e c d = case (head c) of
 	 	                           -- la funzione viene eseguita con
                                            --   * stack vuoto
                                            --   * ambiente composto da x (parametri attuali) seguito da e1 che è
-                                           --     l'ambiente di definizione delle funzione
+                                           --     l'ambiente di definizione delle funzione (dinamico)
                                           --   * c1, ovvero la lista di [Secdexpr] che compone il corpo della funzione
                                            -- Nel dump viene salvato lo stato corrente della macchina, ovvero lo stack
                                            -- senza la chiusura e la lista dei parametri attuali, l'ambiente corrente e
@@ -221,7 +221,7 @@ interprete s e c d = case (head c) of
                                  
                                       Push ->(interprete s  ([OGA]:e)  (tail c)  d)
                                       Stop -> (head s)
-		                      _  -> error "operazione non riconosciuta"
+
 
 --per facilitare l'uso di interprete		
 fin x= (interprete [] [] (x ++ [Stop]) [])  --se x e'  programma Secdexpr da eseguire. Si aggiunge Stop alla fine.
