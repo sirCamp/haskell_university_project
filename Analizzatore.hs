@@ -267,6 +267,11 @@ funt a = do
     -- il tipo inposto dal fatto che h attributi ereditati
     --  ADD LKC LKC
     --  SUB LKC LKC
+
+    -- "let x = 5 and y = 4 in y + x end $" ==> diventa ...(ADD (VAR y) (VAR x))....
+        in sostanza VAR y è l'elemento che ho ereditato prima di elaborare VAR x
+        la stessa cosa si può applicare ad altri operatori
+
 -}
 fune1 :: [Token] -> LKC -> Exc([Token],LKC)
 fune1 ((Symbol PLUS):b)  operand  =
@@ -366,7 +371,7 @@ exp_const  _            = Return (False, ETY)
 
 {-
     FUNZIONE FUY
-    -- sono obbligato a camiare il tipo di ritono ( visto il valore di x )
+    -- sono obbligato a cambiare il tipo di ritono ( visto il valore di x )
     -- il secondo parametro du fuy è epsilon quindi vuoto --> ritono ETY
     -- lista di LKC perchè sono parametri di funzione
 -}
@@ -455,3 +460,17 @@ generateLKCFromLispKit :: String -> LKC
 generateLKCFromLispKit s =  case s of
                                 "" -> error ("Devi inserire un programma")
                                 t ->  generateLKC(prog((lexi s)))
+
+
+
+
+{-
+    FIRST determina l’insieme di simboli terminali che possono cominciare una stringa di simboli, FOLLOW
+    determina l’insieme di simboli terminali che possono seguire un simbolo non terminale in una
+    derivazione in G
+
+    sappiamo che i token cosi hanno un unica corrispondenza nelle produzioni ==> una sola entry
+
+
+    ambigua e = e +e | e* e | t ==> e + (e *e) | (e+e) | * e ==> serve precedenza
+-}

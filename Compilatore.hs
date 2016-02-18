@@ -296,6 +296,8 @@ comp e n c =  case e of (VAR x) -> ((Ld (location x 0 n)):c)
                                Ldf, cio`e al momento della definizione della funzione stessa. Questo ambiente
                                E serve a realizzare lo scope statico
 
+                               LDF ===> CREA CHIUSURA IN CIMA A S ==> COPPIA CORPO | AMBIENTE ===> BINDING STATICO HO TUTTE LE VARIABILI LI
+
 
                          -}
                         (LAMBDAC x y)-> (Ldf (comp y (x:n) [Rtn])):c
@@ -313,7 +315,7 @@ comp e n c =  case e of (VAR x) -> ((Ld (location x 0 n)):c)
                                             -- preparo prima i parametri delle expr
                                             -- simile a CALL preparo i parametri del programma grazi a complist
                                             -- uso AP per caircare il corpo della funzione sul controllo e di costruire l'ambiente in cui fare l'esecuzione
-                                            -- genera un ambiente E'
+                                            -- genera un ambiente E' in cui in testa metto var
                                             -- con let eseguo subito la funzione
                                             -- Infatti una LETC introduce binders della forma x=exp, in
                                                 cui le variabili locali x, per il corpo del LETC, sono del tutto simili ai parametri
@@ -347,13 +349,18 @@ comp e n c =  case e of (VAR x) -> ((Ld (location x 0 n)):c)
                                              -- Ap esegue la chiusura che si trova in cima alla pila
                                              -- c è il codice finora prodotto.
 
+                                             -- compilo i parametri attuali ( preparazione formali) --tipo call
+                                             -- metto in cima ad  (ambiente statico)
+                                             -- compilo l'ambiente dinamico e il corpo e metto var sopra n statico
+                                             -- AP di quello che ho in cima ad S
+
                         {-
                            -- Push inserisce il record  OGA
                            -- complist e var:n produce il codice per calcolare il valore dei binders, l'ambiente statico di complist contiene in cima anche il nome dei binders,
                                 questo perché le espressioni dei binders possono essere delle definizioni di funzioni ricorsive
                                 e di conseguenza devono avere a disposizione anche il loro nome che è contenuto in v.
                            -- La presenza di var nell'ambiente statico porta un problema nel calcolo degli indirizzi, perché viene considerato un RA in più, che a runtime non è presente.
-                              Per questo motivo viene prima eseguita una PUSH (che non modifica l'ambiente statico) la quale aggiunge un RA fittizzio che rappresenta l'RA v dell'ambiente dinamico.
+                              Per questo motivo viene prima eseguita una PUSH (che non modifica l'ambiente statico) la quale aggiunge un RA fittizzio che rappresenta l'RA var dell'ambiente dinamico.
                            -- Ldf costruisce la chiusura per la parte IN (codice prodotto da   comp x..)
                            -- Ap esegue la chiusura che si trova in cima alla pila
                            -- c è il codice finora prodotto.

@@ -1,4 +1,6 @@
 module Tester(
+a,
+b,
 c,
 d,
 f,
@@ -13,6 +15,11 @@ import Lexer
 import Analizzatore
 import Compilatore
 import Interprete
+
+
+a = "let x=5 and y= 6 in x + y * 2 end$"
+
+b = "let x=5 and y=6 in let f = lambda(x) x+5 in f(3) end   end$"
 
 -- distribuisce FACT su una lista di interi *)
 c = "letrec  FACT = lambda ( X ) if  eq ( X, 0 ) then 1 else  X*FACT(  X- 1 )and G = lambda ( H L ) if  eq ( L,  nil ) then L else cons( H(car( L ) ), G ( H, cdr ( L ) )) in G ( FACT, cons(1, cons(2, cons(3, nil))) ) end $";
