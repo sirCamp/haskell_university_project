@@ -1,0 +1,87 @@
+MAcchina SEDC:
+
+S => continen risultati parzilai, totali, pila per gli argimenti delle op ==> li consumo e mett i risultato
+E ==> modella la RAM => contiene i RVAL:
+
+    Durante l’esecuzione, nuove variabili (col loro R-valore)
+    vengono introdotte dai costrutti LETC, LETRECC con i binders e da invocazio-
+    ni di funzioni con i parametri attuali che danno valore ai corrispondenti parametri
+    formali della funzione invocata. Ciascuno di questi costrutti costituisce un nuovo
+    blocco e questi blocchi corrispondono ai record d’attivazione (RA) che costitui-
+    scono l’ambiente dinamico E. Per modellare la sequenza di RA, E è una lista di
+    liste di valori. Ogni lista di valori modella un RA e contiene gli R-valori delle
+    variabili dichiarate nel corrispondente blocco (binders e parametri formali).
+
+    Capire come il compilatore produce questi indirizzi è un punto
+    importante dell’intera traduzione. Infatti il compilatore non possiede l’ambiente
+    E, che si sviluppa solo durante l’esecuzione, ma il compilatore costruisce du-
+    rante la compilazione stessa una copia di E costituita non dagli R-valori delle
+    variabili (noti solo a tempo di esecuzione), ma semplicemente dai nomi delle
+    variabili stesse. Quindi il compilatore usa e costruisce una lista di liste di strin-
+    ghe (appunto i nomi delle variabili), che sarà ovunque denotato con n, in cui il
+    significato delle liste che la compongono è esattamente lo stesso che in E. In so-
+    stanza durante la compilazione si riesce a costruire un modello n dell’ambiente E
+    sufficientemente informativo da garantire che gli indirizzi (n1,n2) , calcolati a
+    tempo di compilazione, durante l’esecuzione delle istruzioni LD(n1,n2) , trovi-
+    no gli R-valori desiderati in E. Per sottolineare la stretta relazione che esiste tra E
+    ed n, ma anche l’importante differenza tra di essi, li chiameremo rispettivamente,
+    ambiente dinamico e ambiente statico.
+
+
+
+Ldf [secdexpr]: è il comando che viene eseguito in corrispondenza della
+definizione di una funzione e che serve a costruire in cima alla pila S la chiusura
+della funzione che è definita. Per capire la prossima spiegazione è necessario
+ricordare che la chiusura di una funzione è una coppia che consiste del corpo
+della funzione (tradotto in lista di comandi SECD) e dell’ambiente E al momen-
+to dell’esecuzione dell’Ldf (cioè al momento della definizione della funzione).
+
+
+
+LDF ===> CREA CHIUSURA IN CIMA A S ==> COPPIA CORPO | AMBIENTE ===> BINDING STATICO HO TUTTE LE VARIABILI LI
+
+
+AP ==> Questa istruzione viene sempre eseguita quando in cima alla pila S c’è una chiusura
+(C’ E’) ed immediatamente sotto alla chiusura c’è la lista A dei valori dei parametri
+attuali dell’invocazione.
+
+QUINFI QUANDO ESEGUO ==> A (par attuali) E' ===> SIMILE A LAMBDA DOVE HO A SOPRA n ( AMB STATICO )
+COL RETURN metto x SOPRA S ovvero lascio sulla pila S il valore della mia esecuzione
+
+CALL ==>iINVOCO FUNZIONE ==> costruisce sullo stack S la lista dei parametri attuali, la traduzione del nome
+sarà semplicemente Ld(n1,n2) dove (n1,n2) è la posizione nell’ambiente dinamico E della chiusura che è il valore della funzione invocata (si osservi che l’indirizzo (n1,n2) è calcolato dal compilatore usando la sua copia statica n dell’ambiente dinamico E). Questa istruzione Ld(n1,n2) carica la chiusura sullo stack S.
+
+
+ z = 0.1
+ h = 0.0
+ x = 1.0
+
+*Tester> tester "let x=9 in let h = 3 and z=2 and y = 6 in h+z+x end end$" 2
+"[Ldc NIL,Ldc (NUM 9),Cons,Ldf [Ldc NIL,Ldc (NUM 6),Cons,Ldc (NUM 2),Cons,Ldc (NUM 3),Cons,Ldf [Ld (1,0),Ld (0,1),Add,Ld (0,0),Add,Rtn],Ap,Rtn],Ap]"
+
+
+
+
+ {-
+                           -- Push inserisce il record  OGA
+                           -- complist e var:n produce il codice per calcolare il valore dei binders, l'ambiente statico di complist contiene in cima anche il nome dei binders,
+                                questo perché le espressioni dei binders possono essere delle definizioni di funzioni ricorsive
+                                e di conseguenza devono avere a disposizione anche il loro nome che è contenuto in v.
+                           -- La presenza di var nell'ambiente statico porta un problema nel calcolo degli indirizzi, perché viene considerato un RA in più, che a runtime non è presente.
+                              Per questo motivo viene prima eseguita una PUSH (che non modifica l'ambiente statico) la quale aggiunge un RA fittizzio che rappresenta l'RA var dell'ambiente dinamico.
+                           -- Ldf costruisce la chiusura per la parte IN (codice prodotto da   comp x..)
+                           -- Ap esegue la chiusura che si trova in cima alla pila
+                           -- c è il codice finora prodotto.
+                        -}
+
+
+COME TROVARE LA CLAUSOLA:
+Prog::= let Bind in Exp end
+Prog::= let var = Exp in Exp end
+Prog::= let var = lambda(Seq_Var) in OOP(seq_exp) //sostituzioni casuali
+Prog::= let var = lambda(Seq_Var) in cons(Seq_exp) end
+Prog::= let var = lambda(Seq_Var) in cons(Exp Seq_var) end
+
+Prog::= let var = lambda(Seq_Var) in cons(OOP(seq_exp) Seq_var) end
+############NON CAPISCO SE Seq_var sia operatore o espressione, serve qualcosa che separi!#############################
+
