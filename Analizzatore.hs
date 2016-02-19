@@ -13,6 +13,19 @@ type Exception = String
 instance Show a => Show (Exc a) where
  show (Raise e)= "ERRORE:" ++ e
  show (Return x) = "RAGGIUNTO:" ++ (show x)
+ 
+ {-
+ 
+ instance Functor Exc where
+  fmap f (Raise e) = Raise e 
+  fmap f (Return v) = Return (f v)
+
+instance Applicative Exc where  
+    pure = Return  
+    (Raise e) <*> _ = Raise e
+    (Return f) <*> something = fmap f something
+    
+-}    
 
 instance Monad Exc where
  return x  = Return x
