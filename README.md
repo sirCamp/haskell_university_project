@@ -1,4 +1,5 @@
-# haskell_university_project
+# LispKit Compiler
+===================
 This a LispKit Compiler made with Haskell
 
 This project is composed by:
