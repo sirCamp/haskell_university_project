@@ -8,7 +8,9 @@ e,
 g,
 h,
 i,
-l
+l,
+m,
+n
 ) where
 
 import Lexer
@@ -42,10 +44,15 @@ i="letrec  FACT = lambda ( X ) if  eq ( X, 0 ) then 1 else  X*FACT(  X - 1 ) and
 
 l= "let x= 5 and y= 6 in x*3 + y * 2* x + x*y end $"
 
+m = "let x=5 and y= 6 in % + y * 2 end$" --errore lexer
+
+n = "let x=5 and y= 6 in  + y * 2 end$" --errore analizzatore
+
 tester :: String -> Int -> String
 tester x y = do
 
             case y of
+                4 -> show(lexi x)
                 3 -> show(run x)
                 2 -> show(comp_one(x))
                 1 -> show(generateLKCFromLispKit(x))

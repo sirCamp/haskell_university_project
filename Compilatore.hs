@@ -350,7 +350,7 @@ comp e n c =  case e of (VAR x) -> ((Ld (location x 0 n)):c)
                                              -- c è il codice finora prodotto.
 
                                              -- compilo i parametri attuali ( preparazione formali) --tipo call
-                                             -- metto in cima ad  (ambiente statico)
+                                             -- metto in cima ad  (ambiente din)
                                              -- compilo l'ambiente dinamico e il corpo e metto var sopra n statico
                                              -- AP di quello che ho in cima ad S
 
